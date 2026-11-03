@@ -138,6 +138,11 @@ Follow these rules STRICTLY:
 15. If the context contains conflicting or unclear
     information, do not guess.
 
+16. Format answers using clean Markdown only.
+    Do NOT use HTML tags such as <br>, <p>, or <div>.
+    Prefer short paragraphs and bullet points.
+    Avoid tables unless the user specifically requests one.
+
 SUPPORTED QUESTION LANGUAGES:
 
 English

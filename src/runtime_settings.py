@@ -1,8 +1,13 @@
+
 """
 runtime_settings.py
 --------------------
-Reads Ollama/Supabase settings: Settings page (session) first,
-then .streamlit/secrets.toml / .env as fallback.
+Reads Groq, Gemini and Supabase settings.
+
+Priority:
+1. Streamlit session state
+2. Environment variables (.env)
+3. Streamlit secrets (cloud deployment)
 """
 
 import os
@@ -16,23 +21,32 @@ except Exception:
 def _get(key: str, default: str = "") -> str:
     if st is not None and key in st.session_state and st.session_state[key]:
         return st.session_state[key]
+
     value = os.getenv(key)
     if value:
         return value
+
     if st is not None:
         try:
             if key in st.secrets:
                 return st.secrets[key]
         except Exception:
             pass
+
     return default
 
 
-def get_ollama_settings():
+def get_groq_settings():
     return {
-        "base_url": _get("OLLAMA_BASE_URL", "https://ollama.com"),
-        "api_key": _get("OLLAMA_API_KEY", ""),
-        "model": _get("OLLAMA_MODEL", "gpt-oss:20b"),
+        "api_key": _get("GROQ_API_KEY", ""),
+        "model": _get("GROQ_MODEL", "openai/gpt-oss-20b"),
+    }
+
+
+def get_gemini_settings():
+    return {
+        "api_key": _get("GEMINI_API_KEY", ""),
+        "model": _get("GEMINI_MODEL", "gemini-3.1-flash-lite"),
     }
 
 
@@ -44,9 +58,16 @@ def get_supabase_settings():
 
 
 def settings_are_configured() -> bool:
-    ollama = get_ollama_settings()
+    groq = get_groq_settings()
+    gemini = get_gemini_settings()
     supabase = get_supabase_settings()
-    return bool(
-        ollama["base_url"] and ollama["model"] and ollama["api_key"]
-        and supabase["url"] and supabase["key"]
+
+    llm_configured = bool(
+        groq["api_key"] or gemini["api_key"]
     )
+
+    supabase_configured = bool(
+        supabase["url"] and supabase["key"]
+    )
+
+    return llm_configured and supabase_configured
