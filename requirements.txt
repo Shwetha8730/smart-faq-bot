@@ -13,9 +13,7 @@ deep-translator
 gTTS
 SpeechRecognition
 langdetect
-deep-translator
 supabase
-ollama
 requests
 langchain-groq
 langchain-google-genai
