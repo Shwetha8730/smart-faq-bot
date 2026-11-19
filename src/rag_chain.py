@@ -152,6 +152,42 @@ def normalize_text(text: str) -> str:
     return " ".join(text.split())
 
 
+def extract_answer_text(content) -> str:
+    """
+    Extract user-visible text from an LLM response.
+
+    Some providers return content as a list of text blocks and include
+    provider metadata (for example signatures) alongside the text.  Do not
+    stringify the complete structure, or that metadata will appear in the UI.
+    """
+    if content is None:
+        return ""
+
+    if isinstance(content, str):
+        return content.strip()
+
+    if isinstance(content, dict):
+        text = content.get("text")
+        if isinstance(text, str):
+            return text.strip()
+
+        nested = content.get("content")
+        if nested is not None:
+            return extract_answer_text(nested)
+
+        return ""
+
+    if isinstance(content, (list, tuple)):
+        parts = []
+        for item in content:
+            text = extract_answer_text(item)
+            if text:
+                parts.append(text)
+        return "\n\n".join(parts).strip()
+
+    return str(content).strip()
+
+
 # ============================================================
 # AUTOMATIC SCHEME DETECTION
 # ============================================================
@@ -264,7 +300,7 @@ def _generate_answer(prompt: str) -> str:
 
             response = llm.invoke(prompt)
 
-            return str(response.content)
+            return extract_answer_text(response.content)
 
         except Exception as e:
 
@@ -291,7 +327,7 @@ def _generate_answer(prompt: str) -> str:
 
             response = llm.invoke(prompt)
 
-            return str(response.content)
+            return extract_answer_text(response.content)
 
         except Exception as gemini_error:
 
@@ -622,4 +658,3 @@ if __name__ == "__main__":
             print("  None")
 
         print("\n" + "-" * 60)
-
