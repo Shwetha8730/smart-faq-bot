@@ -13,7 +13,7 @@ from datetime import datetime
 # ============================================================
 
 from src.rag_chain import answer_question, extract_answer_text
-from src.config import DATA_DIR
+from src.config import DATA_DIR, VECTORSTORE_DIR
 from src.history import add_query, get_recent_queries
 from src.i18n import (
     SUPPORTED_LANGUAGES,
@@ -402,6 +402,23 @@ if "synced_documents" not in st.session_state:
     st.session_state["synced_documents"] = True
     if synced_count > 0:
         st.toast(f"Restored {synced_count} previously-fetched document(s).")
+
+# ============================================================
+# AUTOMATIC CHROMA DATABASE CREATION
+# ============================================================
+
+if (
+    not VECTORSTORE_DIR.exists()
+    or not any(VECTORSTORE_DIR.iterdir())
+):
+    with st.spinner(
+        "Preparing government scheme knowledge base. Please wait..."
+    ):
+        from src.ingest import main as build_knowledge_base
+
+        build_knowledge_base()
+
+    st.success("Government scheme knowledge base is ready!")
 
 
 # ============================================================
